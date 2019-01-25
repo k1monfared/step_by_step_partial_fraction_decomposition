@@ -1,0 +1,198 @@
+def gauss_method(MATRIX,rescale_leading_entry='Last'):
+    # Naive Gaussian reduction
+    """Describe the reduction to echelon form of the given matrix of rationals.
+    MATRIX  matrix of rationals   e.g., M = matrix(QQ, [[..], [..], ..])
+    rescale_leading_entry='First' make the leading entries to 1's while doing Gaussisan ellimination
+    rescale_leading_entry='Last' (Default) make the leading entries to 1's while reducing
+    Returns: reduced form.  Side effect: prints steps of reduction.
+    """
+    import time
+    M = copy(MATRIX)
+    num_rows=M.nrows()
+    num_cols=M.ncols()
+    print('Reducing the augmented matrix')
+    time.sleep(.1)
+    show(M.apply_map(lambda t:t.full_simplify()))
+
+    col = 0   # all cols before this are already done
+    for row in range(0,num_rows):
+        # ?Need to swap in a nonzero entry from below
+        while (col < num_cols
+               and M[row][col] == 0):
+            for i in M.nonzero_positions_in_column(col):
+                if i > row:
+                    print " swap row",row+1,"with row",i+1
+                    time.sleep(.1)
+                    M.swap_rows(row,i)
+                    show(M.apply_map(lambda t:t.full_simplify()))
+                    break
+            else:
+                col += 1
+
+        if col >= num_cols:
+            break
+
+        # Now guaranteed M[row][col] != 0
+        if (rescale_leading_entry == 'First'
+           and M[row][col] != 1):
+            print " take",1/M[row][col],"times row",row+1
+            time.sleep(.1)
+            M.rescale_row(row,1/M[row][col])
+            show(M.apply_map(lambda t:t.full_simplify()))
+
+        for changed_row in range(row+1,num_rows):
+            if M[changed_row][col] != 0:
+                factor = -1*M[changed_row][col]/M[row][col]
+                print " take",factor,"times row",row+1,"plus row",changed_row+1
+                time.sleep(.1)
+                M.add_multiple_of_row(changed_row,row,factor)
+                show(M.apply_map(lambda t:t.full_simplify()))
+        col +=1
+
+    print "Above is a row echelon form, let's keep cruising to get the reduced row echelon form:\n"
+    time.sleep(.1)
+
+    for i in range(num_rows):
+        row = num_rows-i-1
+        if M[row] != 0:
+            for col in range(num_cols):
+                if M[row,col] != 0:
+                    if M[row,col] != 1:
+                        print " take",1/M[row][col],"times row",row+1
+                        time.sleep(.1)
+                        M.rescale_row(row,1/M[row][col])
+                        show(M.apply_map(lambda t:t.full_simplify()))
+                    break
+
+            for changed_row in range(row):
+                factor = -1 * M[row-1-changed_row,col]
+                if factor != 0:
+                    print " take", factor,"times row", row+1, "plus row", row-1-changed_row+1
+                    time.sleep(.1)
+                    M.add_multiple_of_row(row-1-changed_row,row,factor)
+                    show(M.apply_map(lambda t:t.full_simplify()))
+    return(M.apply_map(lambda t:t.full_simplify()))
+
+def solve_linear_system_step_by_step(A,b,steps=True):
+    if not steps:
+        x = A.solve_right(vector(b))
+    else:
+        A = matrix(SR,A)
+        b = matrix(SR,b)
+        R = gauss_method(A.augment(b,subdivide=True))
+        x = R[:,-1]
+    return(x)
+
+def partial_fraction_decompositioin(f,steps=True,linear_steps=False):
+    #inputs: f, a rational function in one variable x
+    #        steps: whether to show the steps for the partial fraction decomposition
+    #        linear_steps: whether to show steps to solve the system of linear equations
+    if not steps:
+        PFD = f.partial_fraction(x)
+        show(PFD)
+    else:
+        import time # this is needed for sleep
+        #             the sleeps are needed for the show() calls to output things in order after print() calls
+        print('You have entered the function \n')
+        time.sleep(.1)
+        show(f)
+
+        num = f.numerator()
+        print('\n Its numerator is \n')
+        time.sleep(.1)
+        show(num)
+
+        den = f.denominator()
+        print('\n And its denominator is \n')
+        time.sleep(.1)
+        show(den)
+
+        F = den.factor_list()
+        print('\n Which has the following factors and multiplicities \n')
+        time.sleep(.1)
+        show(F)
+
+        var_count = 0;
+        T = []
+        for i in range(len(F)): # for each factor
+            for j in range(F[i][1]): # add terms for each multiplicity of it
+                term_num = 0
+                den_deg = F[i][0].degree(x)
+                for k in range(den_deg): # for each degree add a new variable
+                    var(var('A_%d' % var_count))
+                    temp_var = eval('A_%s' % var_count)
+                    term_num += (x.subs(x=temp_var)*x^k)
+                    var_count += 1
+                term_den = F[i][0]^(j+1)
+                T.append(term_num/term_den)
+
+        partial = 0
+        for i in range(len(T)):
+            partial += T[i]
+        print('\n The partial fraction decomposition of your function will have the form \n')
+        time.sleep(.1)
+        show(partial)
+
+        ps = partial.numerator().full_simplify()
+        print('\n If you add all those terms, its numerator will look like \n')
+        time.sleep(.1)
+        show(ps)
+        print('\n Which should be equal to the original numerator of your function, which was \n')
+        time.sleep(.1)
+        show(num)
+
+        C = ps.coefficients(x,sparse=False)
+        max_deg = ps.degree(x)
+        b = matrix(1,max_deg+1)
+        num_coefs = num.coefficients(sparse=false)
+        for i in range(len(num_coefs)):
+            b[0,i] = num_coefs[i]
+        print('\n Comparing their corresponding coefficients will result in the following system of linear equations \n')
+        time.sleep(.1)
+        for i in range(max_deg+1):
+            show(C[i] == b[0,i])
+
+        A = matrix(max_deg+1,var_count)
+        for i in range(max_deg+1):
+            for j in range(var_count):
+                temp_var = eval('A_%s' % j)
+                #term_num += (x.subs(x=temp_var)*x^k)
+                A[i,j] = C[i].coefficient(temp_var)
+        print('\n The coefficient matrix and the right hand side are \n')
+        time.sleep(.1)
+        show(A, b.transpose())
+
+        X = solve_linear_system_step_by_step(A,b.transpose(),steps=linear_steps)
+        print('\n Which has a solution \n')
+        time.sleep(.1)
+        show(matrix(X).transpose())
+
+        eval_count = 0;
+        E = []
+        for i in range(len(F)): # for each factor
+            for j in range(F[i][1]): # add terms for each multiplicity of it
+                term_num = 0
+                den_deg = F[i][0].degree(x)
+                for k in range(den_deg): # for each degree add a new variable
+                    #var(var('A_%d' % var_count))
+                    #temp_var = eval('A_%s' % var_count)
+                    term_num += (x.subs(x=X[eval_count])*x^k)
+                    eval_count += 1
+                term_den = F[i][0]^(j+1)
+                E.append(term_num/term_den)
+
+        PFD = 0
+        for i in range(len(E)):
+            PFD += E[i]
+        print('\n That is, the partial fraction decomposition of your function is \n')
+        time.sleep(.1)
+        show(PFD)
+
+    return(PFD)
+
+# Testing
+num = 2*x + 1
+den = (x-1)^3 * (x^2+1)^2
+f = num/den
+
+pfd = partial_fraction_decompositioin(f,steps=True,linear_steps=False)
