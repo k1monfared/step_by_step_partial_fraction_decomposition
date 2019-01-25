@@ -80,7 +80,7 @@ def solve_linear_system_step_by_step(A,b,steps=True):
         A = matrix(SR,A)
         b = matrix(SR,b)
         R = gauss_method(A.augment(b,subdivide=True))
-        x = R[:,-1]
+        x = vector(R[:,-1])
     return(x)
 
 def partial_fraction_decompositioin(f,steps=True,linear_steps=False):
@@ -190,9 +190,16 @@ def partial_fraction_decompositioin(f,steps=True,linear_steps=False):
 
     return(PFD)
 
-# Testing
+# Test 1
 num = 2*x + 1
 den = (x-1)^3 * (x^2+1)^2
 f = num/den
-
 pfd = partial_fraction_decompositioin(f,steps=True,linear_steps=False)
+
+# Test 2
+num = 1
+den = x^2 - 1
+f = num/den
+pfd = partial_fraction_decompositioin(f,steps=True,linear_steps=True)
+
+
