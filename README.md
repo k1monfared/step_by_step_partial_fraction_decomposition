@@ -1,6 +1,6 @@
 # Step by step partial fraction decomposition
 
-Calculates the partial fraction decomposition of a rational function in a variable x and shows all the steps
+Calculates the partial fraction decomposition of a rational function in a variable x and shows all the steps. You can run by copying the code to the SageCellServer: https://sagecell.sagemath.org (no installation/signup required).
 
 You can call the function with two styles of verbosity. 
 - If `steps=False`, then it will just use the built-in pfd function and will show the output.
