@@ -74,6 +74,11 @@ def gauss_method(MATRIX,rescale_leading_entry='Last'):
     return(M.apply_map(lambda t:t.full_simplify()))
 
 def solve_linear_system_step_by_step(A,b,steps=True):
+    # Solves the matrix equation Ax = b, for given A and b 
+    #    if steps = True, by built-in code 
+    #    by reducing the augmented matrix and showing every step
+    # Credit: Keivan Hassani Monfared, k1monfared@gmail.com
+    
     if not steps:
         x = A.solve_right(vector(b))
     else:
@@ -87,6 +92,8 @@ def partial_fraction_decompositioin(f,steps=True,linear_steps=False):
     #inputs: f, a rational function in one variable x
     #        steps: whether to show the steps for the partial fraction decomposition
     #        linear_steps: whether to show steps to solve the system of linear equations
+    # Credit: Keivan Hassani Monfared, k1monfared@gmail.com
+    
     if not steps:
         PFD = f.partial_fraction(x)
         show(PFD)
